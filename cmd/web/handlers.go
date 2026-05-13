@@ -2,13 +2,27 @@ package main
 
 import (
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server", "Go")
-	w.Write([]byte("Hello from snippetbox"))
+
+	ts, err := template.ParseFiles("./ui/html/pages/home.tmpl")
+	if err != nil {
+		log.Print(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	err = ts.Execute(w, nil)
+	if err != nil {
+		log.Print(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func snippetView(w http.ResponseWriter, r *http.Request) {
@@ -17,10 +31,10 @@ func snippetView(w http.ResponseWriter, r *http.Request) {
 	// it can't be converted, or it's value is less than 1, return a 404.
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil || id < 1 {
-		http.NotFound(w,r)
+		http.NotFound(w, r)
 		return
 	}
-	
+
 	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 }
 
